@@ -1,11 +1,17 @@
 """ Main file for Monte Carlo Tree Search in Tic-Tac-Toe game """
 __author__ = "Bartłomiej Boczek, Krzyszfor Linke"
 
+import itertools
+import logging
+import random
 from dataclasses import dataclass
 from typing import List, Tuple
-import random
+from collections import defaultdict
+
 
 import numpy as np
+
+logging.basicConfig(level="INFO", format="%(message)s")
 
 
 class states:
@@ -89,7 +95,9 @@ class TicTacToe:
             [(0, 0), (1, 1), (2, 2)],
             [(0, 2), (1, 1), (2, 0)],
         ]:
-            unique = [self.board[x][y] for x, y in cross_cords]  # TODO numpy way
+            unique = np.unique(
+                [self.board[x][y] for x, y in cross_cords]
+            )  # TODO numpy way
             if len(unique) == 1 and unique[0] != states.EMPTY:
                 return unique[0]
         return states.EMPTY
@@ -100,36 +108,101 @@ class TicTacToe:
             for state in row:
                 s += states.translate(state) + " "
             s += "\n"
-        return s
+        return s[:-1]
+
+    def get_empty_fields(self):
+        empty = []
+        for x in range(self.size):
+            for y in range(self.size):
+                if self.board[x][y] == states.EMPTY:
+                    empty.append((x, y))
+        return empty
+
+    def copy(self):
+        return TicTacToe(size=self.size, board=self.board.copy())
 
 
-# Create the game
-game = TicTacToe()
+def setup_initial_state_game() -> TicTacToe:
+    game = TicTacToe()
+    game.board = np.array(
+        [
+            [states.EMPTY, states.CIRCLE, states.CROSS],
+            [states.EMPTY, states.CROSS, states.CIRCLE],
+            [states.CIRCLE, states.EMPTY, states.EMPTY],
+        ]
+    )
+    return game
 
-# Select first player randomly (circles or crosses)
-cur_player = random.choice(states.allowed_moves)
 
-# Get initial possible moves
-moves = game.get_possible_moves()
+def follow_random_path(game: TicTacToe, player: int) -> int:
+    """ Unwrap the game randomly to the end and return which player won """
+    mgame = game.copy()
+    moves = mgame.get_possible_moves()
+    # Play the game until there are still moves left
+    while len(moves) != 0:
+        logging.debug(mgame)
 
-# Play the game until there are still moves left
-while len(moves) != 0:
-    # Random strategy of move choice
-    x, y = random.choice(moves)
+        # Random strategy of move choice
+        x, y = random.choice(moves)
+        logging.debug(f"{states.translate(player)}'s move")
+        mgame.move(player=player, x=x, y=y)
 
-    game.move(player=cur_player, x=x, y=y)
+        # Check if the game already has a winner
+        winner = mgame.evaluate_game()
+        if winner != states.EMPTY:
+            break
 
-    # Check if the game already has a winner
-    winner = game.evaluate_game()
-    if winner != states.EMPTY:
-        break
+        # switch player
+        player = states.CROSS if player == states.CIRCLE else states.CIRCLE
+        # get possible moves
+        moves = mgame.get_possible_moves()
+    logging.debug(f"Final:\n{mgame}")
+    winner = mgame.evaluate_game()
+    logging.debug(f"There is a winner: {states.translate(winner)}")
+    return winner
 
-    # switch player
-    cur_player = states.CROSS if cur_player == states.CIRCLE else states.CIRCLE
 
-    # get possible moves
-    moves = game.get_possible_moves()
+game = setup_initial_state_game()
+cur_player = states.CROSS
+other_player = states.CROSS if cur_player == states.CIRCLE else states.CIRCLE
 
-print(game)
+empty_fields = game.get_empty_fields()
+max_iters = 10
+logging.info(f"Initial game:\n{game}")
+while len(empty_fields) != 0:
+    rewards = defaultdict(list)
+    i = 0
+    for x, y in itertools.cycle(empty_fields):
+        this_game = game.copy()
+        this_game.move(cur_player, x=x, y=y)
+        logging.debug(f"Simuation #{i}")
+        winner = follow_random_path(game=this_game, player=other_player)
+        if winner == cur_player:  # you won
+            reward = 1
+        elif winner == states.EMPTY:  # draw, no winner
+            reward = 0
+        else:
+            reward = -1  # you loose
+        rewards[(x, y)].append(reward)
+        i += 1
+        if i >= max_iters:
+            break
+    logging.debug(f"Rewards: {rewards}")
+    best_action = max(rewards.items(), key=lambda v: np.mean(v[1]))[0]
+    logging.debug(f"ACTION: {best_action}")
+    bx, by = best_action
+    game.move(player=cur_player, x=bx, y=by)
+    logging.info(
+        f"Player {states.translate(cur_player)} moved to ({bx},{by}) with MCTS"
+    )
+    logging.info(game)
+    x, y = random.choice(game.get_possible_moves())
+    game.move(other_player, x=x, y=y)
+    logging.info(f"Player {states.translate(other_player)} moved to ({x},{y}) randomly")
+    logging.info(game)
+
+    empty_fields = game.get_empty_fields()
+
 winner = game.evaluate_game()
-print(f"Winner is: {states.translate(winner)}")
+
+logging.info(f"Winner: {states.translate(winner)}")
