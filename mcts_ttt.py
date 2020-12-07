@@ -180,10 +180,17 @@ def main(n_rollouts: int, ini_game: str):
         rewards = defaultdict(list)
 
         i = 0
-        for x, y in itertools.cycle(empty_fields):
+        while i < n_rollouts:
+            # Select random move for simulation
+            field_i = np.random.choice(np.arange(0, len(empty_fields), 1), 1)[0]
+            x, y = empty_fields[field_i]
+
+            # Perform the move
             this_game = game.copy()
             this_game.move(cur_player, x=x, y=y)
             logging.debug(f"Simuation #{i}")
+            
+            # Simulate 
             winner = follow_random_path(game=this_game, player=other_player)
 
             # Assign reward
