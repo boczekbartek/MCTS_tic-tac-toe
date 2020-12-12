@@ -33,7 +33,7 @@ INITIAL_STATES = {
     "assignment": np.array(
         [
             [states.EMPTY, states.CIRCLE, states.CROSS],
-            [states.EMPTY, states.CROSS, states.CIRCLE],
+            [states.EMPTY, states.CROSS, states.EMPTY],
             [states.CIRCLE, states.EMPTY, states.EMPTY],
         ]
     ),
@@ -189,8 +189,8 @@ def main(n_rollouts: int, ini_game: str):
             this_game = game.copy()
             this_game.move(cur_player, x=x, y=y)
             logging.debug(f"Simuation #{i}")
-            
-            # Simulate 
+
+            # Simulate
             winner = follow_random_path(game=this_game, player=other_player)
 
             # Assign reward
@@ -210,7 +210,7 @@ def main(n_rollouts: int, ini_game: str):
         logging.debug(f"Rewards: {rewards}")
 
         # Best action is the one with greatest mean reward
-        best_action = max(rewards.items(), key=lambda v: np.mean(v[1]))[0]
+        best_action = max(rewards.items(), key=lambda v: np.sum(v[1]) / n_rollouts)[0]
         logging.debug(f"ACTION: {best_action}")
 
         # Perform best action
