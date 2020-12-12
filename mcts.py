@@ -105,8 +105,10 @@ class MCTS(object):
         player = deepcopy(self.tree[node].player)
 
         winner = this_game.evaluate_game()
+        if winner != states.EMPTY:
+            return winner
+
         moves = this_game.get_possible_moves()
-        logging.debug(f"")
         while len(moves) != 0:
             # Random strategy of move choice
             x, y = random.choice(moves)
