@@ -82,16 +82,14 @@ class MCTS(object):
         children = list()
         for move_id, move in enumerate(moves):
             cur_player = self.tree[node_id].player
-
+            state = game_state.copy()
             next_player = states.CROSS if cur_player == states.CIRCLE else states.CIRCLE
 
             child_id = node_id + (move_id,)
             children.append(child_id)
+            state.move(cur_player, x=move[0], y=move[1])
             self.tree[child_id] = TreeNode(
-                parent=node_id,
-                game_state=game_state.copy(),
-                player=next_player,
-                move=move,
+                parent=node_id, game_state=state, player=next_player, move=move,
             )
             self.tree[node_id].add_child(child_id)
         rand_idx = np.random.randint(low=0, high=len(children), size=1)[0]
