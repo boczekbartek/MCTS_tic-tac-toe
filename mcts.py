@@ -37,8 +37,8 @@ class MCTS(object):
         self.cur_n = 0
 
     @staticmethod
-    def ucb(w: int, n: int, c: int, total_n: int):
-        logging.debug(f"UCB | W={w}, n={n},c={c}, total_n={total_n}")
+    def ucb(w: int, n: int, c: int, total_n: int, node):
+        logging.debug(f"UCB {node}| W={w}, n={n},c={c}, total_n={total_n}")
         if n == 0:
             n = 1e-6
         exploit = w / n
@@ -61,6 +61,7 @@ class MCTS(object):
                         n=self.tree[child].n,
                         c=self.c,
                         total_n=self.cur_n,
+                        node=self.tree[child].move,
                     )
                     for child in self.tree[node_id].children
                 ]
