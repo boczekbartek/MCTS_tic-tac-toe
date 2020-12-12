@@ -61,7 +61,7 @@ class MCTS(object):
                         n=self.tree[child].n,
                         c=self.c,
                         total_n=self.cur_n,
-                        node=self.tree[child].move,
+                        node=child,
                     )
                     for child in self.tree[node_id].children
                 ]
@@ -78,7 +78,7 @@ class MCTS(object):
         winner = game_state.evaluate_game()
         moves = game_state.get_possible_moves()
 
-        if len(moves) == 0:
+        if winner != states.EMPTY or len(moves) == 0:
             return node_id
 
         children = list()
@@ -106,7 +106,7 @@ class MCTS(object):
 
         winner = this_game.evaluate_game()
         moves = this_game.get_possible_moves()
-        logging.debug(f'')
+        logging.debug(f"")
         while len(moves) != 0:
             # Random strategy of move choice
             x, y = random.choice(moves)
@@ -122,6 +122,7 @@ class MCTS(object):
 
             # get possible moves
             moves = this_game.get_possible_moves()
+
         logging.debug(f"Simulation ended:\n{str(this_game)}")
         winner = this_game.evaluate_game()  # check the winner
         return winner
@@ -140,14 +141,12 @@ class MCTS(object):
         while True:
             self.tree[node_id].n += 1
             self.tree[node_id].w += reward
-            self.tree[node_id].q += self.tree[node_id].w / self.tree[node_id].n
+            self.tree[node_id].q = self.tree[node_id].w / self.tree[node_id].n
             parent_id = self.tree[node_id].parent
             if parent_id == (0,):
                 self.tree[parent_id].n += 1
                 self.tree[parent_id].w += reward
-                self.tree[parent_id].q += (
-                    self.tree[parent_id].w / self.tree[parent_id].n
-                )
+                self.tree[parent_id].q = self.tree[parent_id].w / self.tree[parent_id].n
                 break
             else:
                 node_id = parent_id
