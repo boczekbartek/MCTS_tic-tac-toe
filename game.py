@@ -111,4 +111,3 @@ class TicTacToe:
 
     def copy(self):
         return TicTacToe(size=self.size, board=self.board.copy())
-
