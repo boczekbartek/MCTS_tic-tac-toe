@@ -76,10 +76,11 @@ class MCTS(object):
     def expansion(self, node_id: int) -> int:
         game_state: TicTacToe = self.tree[node_id].game_state
         winner = game_state.evaluate_game()
-        if winner != states.EMPTY:
+        moves = game_state.get_possible_moves()
+
+        if len(moves) == 0:
             return node_id
 
-        moves = game_state.get_possible_moves()
         children = list()
         for move_id, move in enumerate(moves):
             cur_player = self.tree[node_id].player
@@ -105,7 +106,7 @@ class MCTS(object):
 
         winner = this_game.evaluate_game()
         moves = this_game.get_possible_moves()
-
+        logging.debug(f'')
         while len(moves) != 0:
             # Random strategy of move choice
             x, y = random.choice(moves)
