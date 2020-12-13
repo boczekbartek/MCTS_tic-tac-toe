@@ -18,6 +18,7 @@ class TreeNode(object):
     w: int = 0
     q: int = 0
     n: int = 0
+    wins: int = 0
     move: Tuple[int, int] = None
 
     def add_child(self, child_id: int):
@@ -131,8 +132,10 @@ class MCTS(object):
 
     def backpropagation(self, child_node_id: int, winner: int):
         player = self.tree[(0,)].player
+        new_wins = 0
         if winner == player:  # you won
             reward = 1
+            new_wins = 1
         elif winner == states.EMPTY:  # draw, no winner
             reward = 0
         else:
@@ -144,11 +147,14 @@ class MCTS(object):
             self.tree[node_id].n += 1
             self.tree[node_id].w += reward
             self.tree[node_id].q = self.tree[node_id].w / self.tree[node_id].n
+            self.tree[node_id].wins += new_wins
             parent_id = self.tree[node_id].parent
+
             if parent_id == (0,):
                 self.tree[parent_id].n += 1
                 self.tree[parent_id].w += reward
                 self.tree[parent_id].q = self.tree[parent_id].w / self.tree[parent_id].n
+                self.tree[parent_id].wins += new_wins
                 break
             else:
                 node_id = parent_id
@@ -167,8 +173,16 @@ class MCTS(object):
         best_q = Q_values[best_action_id]
         return best_move, best_q
 
+    def win_probability_mtx(self):
+        return [
+            self.tree[leaf].wins / self.tree[leaf].n
+            if self.tree[leaf].n != 0
+            else np.NaN
+            for leaf in self.tree[(0,)].children
+        ]
+
     def run(self):
-        for _ in tqdm(range(self.n_iters)):
+        for _ in range(self.n_iters):
             best_node_id = self.selection()
             logging.debug(f"Selected node: {best_node_id}")
             new_leaf_id = self.expansion(best_node_id)
@@ -185,4 +199,5 @@ class MCTS(object):
 
         best_action, best_q = self.choose_best_action()
         logging.debug(f"Best: action={best_action}, q={best_q}")
-        return best_action
+        Q_values = [self.tree[node].q for node in self.tree[(0,)].children]
+        return best_action, self.win_probability_mtx(), Q_values

@@ -11,69 +11,69 @@ How to install package depenencies.
 pip install -r requirements.txt
 ```
 
+## Available initial states
+* empty game
+* initial state (`--ini-game assignment`):
+
+ ![init](imgs/initial_state.png)
 ## Usage
 * `--n-rollouts` is number of rollouts per Monte Carlo Tree Search interation (*aka* computational budget)
 * `--ini-game` *empty* or *assignment*
 * `--verbose` optional flag to increase number of logs
 
 ``` bash
-python  mcts_ttt.py --n-rollouts N_ROLLOUTS --ini-game {empty,assignment} [--verbose]
+python  main.py --n-rollouts N_ROLLOUTS --ini-game {empty,assignment} [--verbose]
 ```
 
 For example:
 bash
 ```
-python mcts_ttt.py --n-rollouts 10 --ini-game assignment
+python main.py --n-rollouts 10 --ini-game assignment
 ```
 
 Possible output
 ```
+x plays with MCTS
 Initial game:
 _ o x
-_ x o
+_ x _
 o _ _
-Player x moved to (0,0) with MCTS
-x o x
-_ x o
+Player 'x' moved to (1,2)
+_ o x
+_ x x
 o _ _
-Player o moved to (2,1) randomly
-x o x
-_ x o
+Player 'o' moved to (2,1)
+_ o x
+_ x x
 o o _
-Player x moved to (2,2) with MCTS
-x o x
-_ x o
-o o x
-Player o moved to (1,0) randomly
-x o x
-o x o
-o o x
+Player 'x' moved to (1,0)
+_ o x
+x x x
+o o _
 Winner: x
 ```
 
 ## Bulk testing
-To run the script **N** times you can use the `test.sh` script. The script:
-* groups results and count them
-* count execution time
+To run the script **N** times you can use the `test.py` and `plot.py` scripts. 
+* `test.py` runs main.py with dirrerent parameters and pickles results
+* `plot.py` loads test results and create plots
 
 ### Usage
 ```bash
-test.sh LOOPS N_ROLLOUTS
+python test.py
+python plot.py
 ```
 
-### Example
-```
-./test.sh 100 10
-```
+## Convergence 
+![Starting state convergence](imgs/Assignment_game.conv.big.png)
 
-Possible output
-```
-Running mcts_ttt.py 100 times
-   4 Winner: _
-   2 Winner: o
-  94 Winner: x
+![Empty state convergence](imgs/Empty_game.conv.big.png)
 
-real    0m32.985s
-user    0m20.224s
-sys     0m6.284s
-```
+## Probabilities and Q-values in initial states
+### Empty game
+![prob](imgs/prob-e.jpeg)
+![qv](imgs/qv-e.jpeg)
+
+### Assignemnt game
+![prob](imgs/prob-a.jpeg)
+![qv](imgs/qv-a.jpeg)
